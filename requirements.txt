@@ -1,0 +1,4 @@
+python-telegram-bot>=21
+requests>=2.25
+transformers>=4.40
+torch>=2
