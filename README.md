@@ -5,7 +5,7 @@ This Telegram bot gives you weather updates with clothing advice in a friendly R
 ## Features
 - Replies to `/start` with a greeting and asks for your location or city name.
 - Uses free [Open-Meteo](https://open-meteo.com/) APIs to get current weather.
-- Generates simple clothing advice based on temperature, precipitation and wind.
+- Generates clothing advice with a small Russian GPT model (ruGPT3-small).
 - All responses are in Russian with a casual "gopnik" tone.
 - No paid services or API keys required (only your Telegram bot token).
 
@@ -20,7 +20,8 @@ Open Terminal and run:
 ```bash
 python3 -m pip install --user -r requirements.txt
 ```
-This installs `python-telegram-bot` and `requests` into your user Python environment.
+The requirements include `transformers` and `torch` for the AI model, along with
+`python-telegram-bot` and `requests`.
 
 ### 2. Get a Telegram bot token
 1. In Telegram, talk to [@BotFather](https://t.me/BotFather).
@@ -36,7 +37,9 @@ In Terminal, navigate to that directory and set the environment variable before 
 export TELEGRAM_BOT_TOKEN=YOUR_TOKEN_HERE
 python3 gopnik_weather_bot.py
 ```
-Leave the script running to keep the bot online. Press `Ctrl+C` to stop.
+On the first launch, the AI model will download from Hugging Face and may take
+a few minutes. Leave the script running to keep the bot online. Press `Ctrl+C`
+to stop.
 
 ## Example interaction
 ```

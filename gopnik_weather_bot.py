@@ -8,6 +8,8 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 # Enable logging
 logging.basicConfig(
@@ -15,27 +17,38 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Gopnik style clothing advice based on weather
+# --- AI clothing advice -------------------------------------------------------
+
+MODEL_NAME = "sberbank-ai/rugpt3small_based_on_gpt2"
+_tokenizer = None
+_model = None
+
 
 def generate_clothing_advice(temp_c, precipitation, wind_speed):
-    advice = []
-    if precipitation > 0:
-        advice.append("возьми зонт или капюшон")
-    if temp_c < -10:
-        advice.append("шубу надевай, холод собачий")
-    elif temp_c < 0:
-        advice.append("тёплую куртку застегни")
-    elif temp_c < 10:
-        advice.append("куртку не забудь")
-    elif temp_c < 20:
-        advice.append("легкую кофту накинь")
-    else:
-        advice.append("футболку можно")
+    """Generate clothing advice using a small Russian GPT model."""
+    global _tokenizer, _model
+    if _tokenizer is None or _model is None:
+        _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        _model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
 
-    if wind_speed > 10:
-        advice.append("ветрено, шарф пригодится")
-
-    return ' и '.join(advice)
+    prompt = (
+        f"Погода: {temp_c}°C, осадки {precipitation} мм, ветер {wind_speed} м/с. "
+        "Дай совет, что надеть. Отвечай коротко и по-гопницки."
+    )
+    inputs = _tokenizer(prompt, return_tensors="pt")
+    with torch.no_grad():
+        tokens = _model.generate(
+            **inputs,
+            max_new_tokens=30,
+            do_sample=True,
+            top_p=0.9,
+            temperature=0.8,
+        )
+    text = _tokenizer.decode(tokens[0], skip_special_tokens=True)
+    # Remove the prompt part if model repeats it
+    if prompt in text:
+        text = text[len(prompt) :]
+    return text.strip()
 
 
 def get_weather_by_coords(lat, lon):
