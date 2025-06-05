@@ -23,6 +23,13 @@ python3 -m pip install --user -r requirements.txt
 The requirements include `transformers` and `torch` for the AI model, along with
 `python-telegram-bot` and `requests`.
 
+If you encounter `ModuleNotFoundError: No module named 'torch'`, make sure the
+installation above completed successfully. You can reinstall just PyTorch with:
+
+```bash
+python3 -m pip install --user torch --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
 ### 2. Get a Telegram bot token
 1. In Telegram, talk to [@BotFather](https://t.me/BotFather).
 2. Use `/newbot` to create a bot and copy the token you receive.

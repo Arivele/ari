@@ -9,7 +9,12 @@ from telegram.ext import (
     filters,
 )
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+try:
+    import torch
+except ModuleNotFoundError as e:
+    raise SystemExit(
+        "PyTorch not installed. Install dependencies with `pip install -r requirements.txt`."
+    ) from e
 
 # Enable logging
 logging.basicConfig(
