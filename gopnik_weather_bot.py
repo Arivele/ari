@@ -1,7 +1,13 @@
 import logging
 import requests
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
 # Enable logging
 logging.basicConfig(
@@ -60,54 +66,53 @@ def get_coords_by_city(city):
 
 # Command handlers
 
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_first = update.effective_user.first_name
     reply_keyboard = [[KeyboardButton(text="Отправить локацию", request_location=True)]]
-    update.message.reply_text(
+    await update.message.reply_text(
         f"Здарова, {user_first}! Поделись локацией или напиши свой город, посмотрим что там по погоде.",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
 
 
-def handle_location(update: Update, context: CallbackContext) -> None:
+async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     lat = update.message.location.latitude
     lon = update.message.location.longitude
     temp_c, wind_speed, precipitation = get_weather_by_coords(lat, lon)
     advice = generate_clothing_advice(temp_c, precipitation, wind_speed)
-    update.message.reply_text(
+    await update.message.reply_text(
         f"Сейчас {temp_c}°C, осадки {precipitation}мм, ветер {wind_speed} м/с — {advice}"
     )
 
 
-def handle_text(update: Update, context: CallbackContext) -> None:
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     city = update.message.text.strip()
     coords = get_coords_by_city(city)
     if not coords:
-        update.message.reply_text("Не нашёл такой город, попробуй другую локацию, брат")
+        await update.message.reply_text("Не нашёл такой город, попробуй другую локацию, брат")
         return
     lat, lon = coords
     temp_c, wind_speed, precipitation = get_weather_by_coords(lat, lon)
     advice = generate_clothing_advice(temp_c, precipitation, wind_speed)
-    update.message.reply_text(
+    await update.message.reply_text(
         f"В {city} сейчас {temp_c}°C, осадки {precipitation}мм, ветер {wind_speed} м/с — {advice}"
     )
 
 
-def main() -> None:
+async def main() -> None:
     import os
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         raise RuntimeError("TELEGRAM_BOT_TOKEN environment variable not set")
-    updater = Updater(token)
+    application = ApplicationBuilder().token(token).build()
 
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.location, handle_location))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.LOCATION, handle_location))
+    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_text))
 
-    updater.start_polling()
-    updater.idle()
+    await application.run_polling()
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())

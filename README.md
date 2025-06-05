@@ -12,6 +12,8 @@ This Telegram bot gives you weather updates with clothing advice in a friendly R
 ## Installation and Usage
 
 Follow these steps on macOS Sequoia 15.5 (or later) with Python 3.10+.
+The bot relies on `python-telegram-bot` version 21 or newer, so installing
+packages from `requirements.txt` is important.
 
 ### 1. Install Python libraries
 Open Terminal and run:
